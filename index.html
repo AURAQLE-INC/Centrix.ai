@@ -31,7 +31,6 @@ nav{position:fixed;top:0;width:100%;display:flex;justify-content:space-between;a
 .hero-text .sub{margin:18px 0 8px;color:var(--gold2);letter-spacing:3px;text-transform:uppercase;font-size:11px;font-weight:700}
 .hero-text p.lead{color:#b8b8b8;font-size:15.5px;line-height:1.7;max-width:560px;margin:18px 0 28px}
 
-/* Enhanced 3D Tilt Card & Display Wallet Integration */
 .card3d-wrapper{perspective:1200px;display:grid;place-items:center}
 .card3d{width:100%;max-width:400px;background:linear-gradient(180deg,#141418,#0a0a0c);border:1px solid rgba(212,175,55,.3);border-radius:28px;box-shadow:0 40px 100px rgba(0,0,0,.8), 0 0 25px rgba(212,175,55,0.15);position:relative;padding:24px;display:flex;flex-direction:column;transition:transform 0.1s ease-out}
 .card-top{display:flex;justify-content:space-between;color:var(--gray);font-size:10px;letter-spacing:1.5px;margin-bottom:12px}
@@ -48,6 +47,9 @@ nav{position:fixed;top:0;width:100%;display:flex;justify-content:space-between;a
 .feat{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:22px}
 .feat h3{font-size:13px;color:var(--gold2);margin-bottom:8px;letter-spacing:1px}
 .feat p{font-size:13px;color:#9a9a9a;line-height:1.6}
+.privacy-section{margin:20px 5%;background:rgba(17,17,20,0.8);border:1px solid rgba(76,175,80,0.3);border-radius:18px;padding:28px;text-align:left}
+.privacy-section h3{color:var(--success);font-size:14px;letter-spacing:1px;margin-bottom:8px}
+.privacy-section p{color:#aaa;font-size:13px;line-height:1.6}
 .cta{margin:40px 5%;background:radial-gradient(600px at 50% 0%, rgba(212,175,55,.25), transparent), #111114;border:1px solid rgba(212,175,55,.2);border-radius:24px;padding:50px;text-align:center}
 .cta h2{font-size:34px;margin-bottom:12px;font-weight:900}
 .cta p{color:#aaa;max-width:600px;margin:0 auto 22px;font-size:14px}
@@ -68,7 +70,7 @@ footer{padding:30px 5%;display:flex;justify-content:space-between;color:#666;fon
 <div class="dropdown-item"><h4>FOUNDER & DIRECTOR</h4><p><b style="color:#fff">Samuel Success Bright</b> known as <b style="color:#f9e27a">Ghod Father (The Axiom Auraqle)</b> — Builder, designer, axiom thinker. Director of AURAQLE INC. & AURAQLE LABS.</p></div>
 </div>
 </div>
-<a href="#contact" class="hide-m">Contact</a>
+<a href="#privacy">Privacy</a>
 <a href="https://wa.me/2349162976894?text=Hi%20Centrix" class="btn-gold" target="_blank" style="padding:10px 20px;">Launch WhatsApp</a>
 </div>
 </nav>
@@ -86,29 +88,22 @@ Founded by <b style="color:#f9e27a">Samuel Success Bright aka Ghod Father (The A
 <a href="#centrix" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#fff;padding:12px 22px;border-radius:100px;font-weight:700;font-size:13px;text-decoration:none;display:inline-block">Explore Ecosystem</a>
 </div>
 <div style="margin-top:22px;display:flex;gap:18px;color:#777;font-size:11px;flex-wrap:wrap">
-<span>✓ WhatsApp Native</span><span>✓ Monad Network</span><span>✓ Pinata IPFS Secured</span><span>✓ 0.8s Response</span>
+<span>✓ WhatsApp Native</span><span>✓ Monad Network</span><span>✓ Pinata IPFS Secured</span><span>✓ Zero-Knowledge Isolation</span>
 </div>
 </div>
 
-<!-- Interactive 3D Tilt Card & Integrated Display Wallet Preview -->
 <div class="card3d-wrapper" id="cardWrapper">
 <div class="card3d" id="tiltCard">
 <div class="card-top"><span>CENTRIX_AI_v1.rpc</span><span style="color:#f9e27a">● MONAD TESTNET</span></div>
-
-
-<!-- Pinata Asset Card Image Preview -->
 <div class="nft-preview-container">
 <img src="https://gateway.pinata.cloud/ipfs/bafybeigauvxl4std2kpjs2hm5zb7ca7zn7jhvomw2g6lrx45gldeo4orq4" alt="Centrix CNX Asset Badge">
 </div>
-
-<!-- Integrated Display Wallet Module -->
 <div class="wallet-box">
 <div class="w-title">💳 In-App Display Wallet</div>
 <div class="wallet-row">Subscription: <span style="color:var(--success);">Student Lifeline (Active)</span></div>
 <div class="wallet-row">Reward Coins: <span>150 CNX Coins</span></div>
 <div class="wallet-row">Minted Assets: <span style="color:var(--gold);">1 CNX Badge (0.001 MON)</span></div>
 </div>
-
 <div class="status"><span class="live"></span> Bot Status: RPC handshake active. Ready for student deployment via WhatsApp.</div>
 </div>
 </div>
@@ -119,6 +114,11 @@ Founded by <b style="color:#f9e27a">Samuel Success Bright aka Ghod Father (The A
 <div class="feat"><h3>⚡ RPC LIVING</h3><p>Already built. We just flip the RPC switch. Sub-second execution, auto-reconnect, persistent sessions.</p></div>
 <div class="feat"><h3>🛰️ BY AURAQLE LABS</h3><p>A subsection of AURAQLE INC. We don't chase trends, we create axioms. CENTRIX AI is product #1.</p></div>
 </div>
+
+<section class="privacy-section" id="privacy">
+<h3>🔒 Privacy & Data Transparency Standard</h3>
+<p>Centrix AI processes interactions dynamically to execute requested tasks. All conversation threads and saved document tokens are isolated per individual user ID (`#ID`). Administrator telemetry displays system health, active subscriptions, and Monad contract status—never individual message contents.</p>
+</section>
 
 <section class="cta" id="waitlist">
 <h2>Be first when Centrix goes live</h2>
@@ -135,13 +135,11 @@ Founded by <b style="color:#f9e27a">Samuel Success Bright aka Ghod Father (The A
 </footer>
 
 <script>
-// Background Canvas Starfield Animation
 const c=document.getElementById('bg'),x=c.getContext('2d');let w,h,pts=[];
 function resize(){w=c.width=window.innerWidth;h=c.height=window.innerHeight}window.onresize=resize;resize();
 for(let i=0;i<60;i++)pts.push({x:Math.random()*w,y:Math.random()*h,vx:(Math.random()-.5)*.4,vy:(Math.random()-.5)*.4,r:Math.random()*1.4+0.3});
 function anim(){x.clearRect(0,0,w,h);x.fillStyle='rgba(212,175,55,0.16)';pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>w)p.vx*=-1;if(p.y<0||p.y>h)p.vy*=-1;x.beginPath();x.arc(p.x,p.y,p.r,0,Math.PI*2);x.fill();});requestAnimationFrame(anim)}anim();
 
-// 3D Tilt Card Interaction
 const wrapper = document.getElementById('cardWrapper');
 const card = document.getElementById('tiltCard');
 document.addEventListener('mousemove', e => {
