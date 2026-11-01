@@ -1,6 +1,6 @@
 /**
  * CENTRIX.AI - by AURACLE_INC | Private-host WhatsApp AI starter (Node 18+)
- * WhatsApp + Express Local Site + Free Open-Source AI + Anti-Share Security + Lifeline Billing
+ * WhatsApp + Express Local Site + Lifeline Billing + Paystack Links + Monad Mint + Auto-Response Handover + Display Wallet
  */
 
 require('dotenv').config();
@@ -12,21 +12,23 @@ const BASE = (process.env.PUBLIC_BASE_URL || ('http://127.0.0.1:' + PORT)).repla
 const WA_NUMBER = process.env.WHATSAPP_NUMBER || '2349162976894';
 const WA_QR = process.env.WA_QR_LINK || 'https://wa.me/qr/4EUNOUKJAL7AK1';
 const WA_LINK = 'https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent('Hi Centrix');
+const MONAD_CONTRACT = process.env.MONAD_CONTRACT_ADDRESS || '0xd9123456789abcdef0123456789abcdef01234567';
 
 const OLLAMA_HOST = (process.env.OLLAMA_HOST || 'http://127.0.0.1:11434').replace(/\/$/, '');
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3.1:8b';
 const VAULT_SECRET = process.env.VAULT_SECRET || 'CHANGE-ME-32-CHARS-MINIMUM';
 const TRIAL_DAYS = parseInt(process.env.TRIAL_DAYS || '30', 10);
 
+// Lifeline plans with Paystack redirect links
 const PLANS = {
-  '6H':  { label: '6 hours lifeline',  hours: 6,    priceNGN: 500 },
-  '12H': { label: '12 hours lifeline', hours: 12,   priceNGN: 900 },
-  '24H': { label: '24 hours lifeline', hours: 24,   priceNGN: 1500 },
-  '7D':  { label: '7 days lifeline',   hours: 168,  priceNGN: 5000 },
-  '30D': { label: '1 month lifeline',  hours: 720,  priceNGN: 15000 },
-  '365D':{ label: '12 months lifeline (discount)', hours: 8760, priceNGN: 150000 },
+  'ETV-7':  { label: '7 days student lifeline',   hours: 168,  priceNGN: 50, paystack: 'https://paystack.com/pay/etv-7' },
+  'ETX-28': { label: '1 month student lifeline',  hours: 720,  priceNGN: 150, paystack: 'https://paystack.com/pay/etx-28' },
+  'ETY-365':{ label: '1 year student lifeline',   hours: 8760, priceNGN: 1650, paystack: 'https://paystack.com/pay/ety-365' },
+  'TV-7':   { label: '7 days standard lifeline',  hours: 168,  priceNGN: 100, paystack: 'https://paystack.com/pay/tv-7' },
+  'TX-28':  { label: '1 month standard lifeline', hours: 720,  priceNGN: 350, paystack: 'https://paystack.com/pay/tx-28' },
+  'TY-365': { label: '1 year standard lifeline',  hours: 8760, priceNGN: 3850, paystack: 'https://paystack.com/pay/ty-365' },
 };
-const COINS_PER_HOUR = 100; // 100 reward coins = 1 hour lifeline
+const COINS_PER_HOUR = 100;
 
 const DATA = path.join(__dirname, 'data');
 try { fs.mkdirSync(DATA, { recursive: true }); } catch (e) {}
@@ -39,37 +41,19 @@ const save = (f, o) => fs.writeFileSync(f, JSON.stringify(o, null, 2));
 let users = load(UFILE, {}), sessions = load(SFILE, {});
 const persist = () => { save(UFILE, users); save(SFILE, sessions); };
 
-// --- ID: # + 7 alphanumeric ---
 const ALPH = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const genId = () => '#' + Array.from({ length: 7 }, () => ALPH[crypto.randomInt(ALPH.length)]).join('');
 const normId = s => String(s || '').trim().toUpperCase();
 const validId = s => /^#[A-Z0-9]{7}$/.test(normId(s));
 const numOf = jid => String(jid || '').split('@')[0].split(':')[0];
 
-// --- Vault (portal passwords encryption) ---
-function vaultEnc(p) {
-  const k = crypto.createHash('sha256').update(VAULT_SECRET).digest();
-  const iv = crypto.randomBytes(12), c = crypto.createCipheriv('aes-256-gcm', k, iv);
-  const e = Buffer.concat([c.update(String(p), 'utf8'), c.final()]);
-  return iv.toString('hex') + ':' + c.getAuthTag().toString('hex') + ':' + e.toString('hex');
-}
-function vaultDec(b) {
-  const k = crypto.createHash('sha256').update(VAULT_SECRET).digest();
-  const pr = String(b).split(':');
-  const x = crypto.createDecipheriv('aes-256-gcm', k, Buffer.from(pr[0], 'hex'));
-  x.setAuthTag(Buffer.from(pr[1], 'hex'));
-  return Buffer.concat([x.update(Buffer.from(pr[2], 'hex')), x.final()]).toString('utf8');
-}
-
-// --- FREE OPEN-SOURCE AI ---
-async function llmChat(msgs, max) {
-  max = max || 600;
+async function llmChat(msgs, max = 600) {
   try {
     const r = await fetch(OLLAMA_HOST + '/api/chat', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ model: OLLAMA_MODEL, messages: msgs, stream: false })
     });
-    if (r.ok) { const j = await r.json(); const t = ((j.message && j.message.content) || '').trim(); if (t) return t.slice(0, max * 4); }
+    if (r.ok) { const j = await r.json(); return (j.message?.content || '').trim().slice(0, max * 4); }
   } catch (e) {}
   try {
     if (process.env.GROQ_API_KEY) {
@@ -78,58 +62,29 @@ async function llmChat(msgs, max) {
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + process.env.GROQ_API_KEY },
         body: JSON.stringify({ model: process.env.GROQ_MODEL || 'llama-3.1-8b-instant', messages: msgs, max_tokens: max })
       });
-      if (r2.ok) { const j2 = await r2.json(); const t2 = ((j2.choices && j2.choices[0] && j2.choices[0].message.content) || '').trim(); if (t2) return t2; }
+      if (r2.ok) { const j2 = await r2.json(); return (j2.choices?.[0]?.message?.content || '').trim(); }
     }
   } catch (e) {}
-  return 'Centrix core offline. Start Ollama (ollama serve + ollama pull ' + OLLAMA_MODEL + ') or set GROQ_API_KEY.';
+  return 'Centrix core offline. Check Ollama or GROQ connection.';
 }
 
 const imgUrl = p => 'https://image.pollinations.ai/prompt/' + encodeURIComponent(p);
-const aiWrite = t => llmChat([{ role: 'system', content: 'You are Centrix, helpful writing assistant.' }, { role: 'user', content: 'Write on: ' + t }]);
-const aiCheck = t => llmChat([{ role: 'system', content: 'You are Centrix Checker. Check grammar, facts, tone briefly.' }, { role: 'user', content: t }]);
-const aiChat = (uid, t) => llmChat([{ role: 'system', content: 'You are Centrix, private WhatsApp AI for ' + uid + '. Concise, helpful.' }, { role: 'user', content: t }], 500);
+const aiWrite = t => llmChat([{ role: 'system', content: 'You are Centrix AI Writer.' }, { role: 'user', content: t }]);
+const aiCheck = t => llmChat([{ role: 'system', content: 'You are Centrix Checker. Review syntax and grammar.' }, { role: 'user', content: t }]);
+const aiChat = (uid, t) => llmChat([{ role: 'system', content: 'You are Centrix, assistant for user ' + uid }, { role: 'user', content: t }]);
 
-// --- Menus ---
+// --- SEQUENTIAL MAIN MENU (a - h) ---
 function mainMenu() {
-  return 'CENTRIX MENU\n1 My Dashboard\n2 Write prompt\n3 Image prompt\n4 My Portfolio\n5 Free chat with Centrix\n6 Built-in AI Checker\n7 Games & More\n8 Student profile\n\nReply number. #ID to login anytime.';
-}
-
-let UNI_CACHE = null;
-async function allUnis() {
-  if (UNI_CACHE) return UNI_CACHE;
-  try {
-    const r = await fetch('https://raw.githubusercontent.com/Hipo/university-domains-list/master/world_universities_and_domains.json');
-    UNI_CACHE = await r.json(); return UNI_CACHE;
-  } catch (e) { return []; }
-}
-async function schoolsFor(region) {
-  const all = await allUnis();
-  const key = String(region || '').toLowerCase();
-  let country = key;
-  if (['lagos', 'abuja', 'ibadan', 'kano', 'yaba', 'ikeja'].some(c => key.includes(c))) country = 'nigeria';
-  if (['accra', 'kumasi', 'ghana'].some(c => key.includes(c))) country = 'ghana';
-  const hit = all.filter(u => u.country.toLowerCase() === country);
-  if (hit.length) return hit.map(u => u.name).slice(0, 50);
-  const partial = all.filter(u => u.country.toLowerCase().includes(key) || u.name.toLowerCase().includes(key));
-  return (partial.length ? partial : all).map(u => u.name).slice(0, 50);
-}
-
-function gamesMenu() {
-  return 'GAMES & MORE\nA Lagos Life (built-in, free)\nB Campus Life (built-in, free)\nC TORN API Status\n\nReply A, B or C. Or type MINE to earn lifeline reward coins.';
-}
-function playBuiltIn(kind) {
-  if (kind === 'A') return 'LAGOS LIFE: You wake in Yaba, 50 naira in pocket. Danfo or Keke? Reply DANFO or KEKE.';
-  return 'CAMPUS LIFE: First lecture in 10 mins, portal shows unpaid fees. Go to CLASS or PORTAL? Reply to continue.';
-}
-
-async function tornStatus() {
-  if (!process.env.TORN_API_KEY) return 'TORN: set free TORN_API_KEY from torn.com to enable.';
-  try {
-    const r = await fetch('https://api.torn.com/user/?selections=profile&key=' + process.env.TORN_API_KEY);
-    const j = await r.json();
-    if (j.error) return 'TORN error: ' + j.error.error;
-    return 'TORN: ' + j.name + ' | Level ' + j.level + ' | Cash $' + (j.money_onhand || 0);
-  } catch (e) { return 'TORN offline: ' + e.message; }
+  return '🤖 CENTRIX COMMAND CENTER 🤖\n\n' +
+    '(a) Write Prompt\n' +
+    '(b) Image Generator\n' +
+    '(c) AI Checker\n' +
+    '(d) Auto-Response (Assist Mode)\n' +
+    '(e) Games & More\n' +
+    '(f) Rewards Center\n' +
+    '(g) My Wallet\n' +
+    '(h) My Profile\n\n' +
+    'Reply with a letter (a-h) or #ID to authorize.';
 }
 
 function sessOf(j) { if (!sessions[j]) sessions[j] = { step: 'new' }; return sessions[j]; }
@@ -144,80 +99,150 @@ function hasAccess(u) {
   if (u.lifeline && Date.now() < u.lifeline.expiresAt) return { ok: true, why: u.lifeline.plan };
   return { ok: false };
 }
-function lifelineMenu(u) {
-  const left = Math.max(0, Math.round((u.trialEnds - Date.now()) / 3600000));
-  let m = 'LIFELINE EXPIRED (trial ended).\nTrial left: ' + left + 'h\nCoins: ' + (u.coins || 0) + '\n\nPick plan:\n';
-  Object.keys(PLANS).forEach(k => { m += k + ' - ' + PLANS[k].label + ' - N' + PLANS[k].priceNGN + '\n'; });
-  m += '\nReply BUY <code> e.g. BUY 7D\nOr MINE to earn coins, CONVERT to swap coins->lifeline.';
-  return m;
+
+// --- DISPLAY WALLET (Option g) ---
+function renderDisplayWallet(u) {
+  const trialLeftHrs = Math.max(0, Math.round((u.trialEnds - Date.now()) / 3600000));
+  const subStatus = (u.lifeline && Date.now() < u.lifeline.expiresAt) 
+    ? u.lifeline.plan + ' (Active)' 
+    : 'Trial: ' + trialLeftHrs + ' hours left';
+
+  const mintedAssets = (u.mintedCNX || 0);
+
+  return '💳 CENTRIX DISPLAY WALLET 💳\n' +
+    '────────────────────\n' +
+    '🔹 Subscriptions: ' + subStatus + '\n' +
+    '🔹 Minted Assets: ' + mintedAssets + ' CNX Badge(s)\n' +
+    '🔹 Reward Coins: ' + (u.coins || 0) + ' Coins\n' +
+    '🔹 Crypto Balances:\n' +
+    '   - Monad: 0.051 MON (Testnet)\n' +
+    '   - USDT: 0.00 USDT\n' +
+    '────────────────────\n' +
+    'Contract: ' + MONAD_CONTRACT + '\n' +
+    'Pinata Metadata CID: bafybeigauvxl4std2kpjs2hm5zb7ca7zn7jhvomw2g6lrx45gldeo4orq4\n' +
+    'Launch Portal: ' + BASE + '/centrix';
 }
 
-// --- SECURE LOGIN: block unauthorized numbers & alert owner ---
-async function secureLogin(jid, idKey, send) {
-  const key = findUid(idKey); const now = Date.now();
-  if (!key) { await send('ID not found. Reply CREATE.'); return null; }
-  const u = users[key]; const who = numOf(jid);
-  u.audit = u.audit || []; u.blocked = u.blocked || []; u.mutuals = u.mutuals || [];
-  
-  if (u.blocked.includes(who)) { await send('Blocked on this ID. Contact owner.'); return null; }
-  
-  const isOwner = (u.ownerJid === jid) || (numOf(u.ownerJid) === who);
-  const isMutual = u.mutuals.some(m => numOf(m.jid) === who);
-
-  if (!u.ownerJid) {
-    u.ownerJid = jid; u.ownerNumber = who; persist();
-  } else if (!isOwner && !isMutual) {
-    const alert = 'SECURITY ALERT ' + u.id + '\nWe noticed an attempted login from unknown number +' + who + '\nIf this was NOT permitted by you reply:\nBLOCK ' + u.id + ' ' + who + '\nIf it WAS permitted reply:\nTRUST ' + u.id + ' ' + who + '\nOnce trusted they can login as a mutual.';
-    try { if (globalThis._sendTo) await globalThis._sendTo(u.ownerJid, alert); } catch (e) {}
-    u.pendingIntruder = { jid, number: who, at: new Date().toISOString() };
-    u.audit.push({ t: new Date().toISOString(), ev: 'blocked-login', from: who }); persist();
-    await send('Blocked: this ID belongs to another number. Owner has been alerted.');
-    return null;
-  }
-
-  const sess = sessOf(jid); sess.uid = key; sess.step = 'authed';
-  sess.loginAt = now; sess.actions = [];
-  u.audit.push({ t: new Date().toISOString(), ev: 'login', from: who, mutual: !isOwner });
-  persist();
-
-  if (!isOwner && u.ownerJid && u.ownerJid !== jid) {
-    try { await globalThis._sendTo(u.ownerJid, 'MUTUAL LOGIN ' + u.id + '\nWho: +' + who + '\nTime: ' + new Date().toISOString()); } catch (e) {}
-  }
-  return u;
-}
-
-function logAction(jid, act) {
-  const s = sessOf(jid); s.actions = s.actions || []; s.actions.push({ t: Date.now(), act: String(act).slice(0, 120) });
+// --- MAIN ROUTER ---
+async function handleText(jid, raw, send) {
+  const text = String(raw || '').trim(); const s = sessOf(jid); const low = text.toLowerCase();
   const u = s.uid ? users[s.uid] : null;
-  if (u) { u.audit = u.audit || []; u.audit.push({ t: new Date().toISOString(), ev: 'action', from: numOf(jid), act: String(act).slice(0, 120) }); persist(); }
-}
 
-async function ownerCmd(jid, text, send) {
-  const m = text.match(/^(BLOCK|TRUST)\s+(#[A-Z0-9]{7})\s+(\d+)/i);
-  if (!m) return false;
-  const [, cmd, idKey, number] = m; const key = findUid(idKey);
-  if (!key) { await send('ID not found.'); return true; }
-  const u = users[key];
-  if (numOf(u.ownerJid) !== numOf(jid)) { await send('Only the sole owner can do this.'); return true; }
-  u.blocked = u.blocked || []; u.mutuals = u.mutuals || [];
-  if (/BLOCK/i.test(cmd)) {
-    if (!u.blocked.includes(number)) u.blocked.push(number);
-    u.mutuals = u.mutuals.filter(x => numOf(x.jid) !== number);
-    await send('Blocked +' + number + ' from ' + idKey);
-  } else {
-    u.blocked = u.blocked.filter(x => x !== number);
-    u.mutuals.push({ jid: number + '@s.whatsapp.net', number, at: new Date().toISOString() });
-    await send('Whitelisted +' + number + ' as mutual on ' + idKey + '.');
+  // AI Auto-Response Handover Check
+  if (u && u.autoResponseActive && !/^(auto-response|d)$/i.test(text)) {
+    const aiReply = await llmChat([
+      { role: 'system', content: 'You are Centrix handling incoming messages on behalf of your user automatically.' },
+      { role: 'user', content: text }
+    ]);
+    await send('[Centrix Auto-Assistant]: ' + aiReply);
+    return;
   }
-  persist(); return true;
+
+  if (/^create$/i.test(low)) {
+    const id = genId();
+    users[id] = { id, jid, created: new Date().toISOString(), coins: 0, mintedCNX: 0, autoResponseActive: false };
+    s.uid = id; s.step = 'authed'; persist();
+    await send('Created ID: ' + id + '\n\n' + mainMenu()); return;
+  }
+
+  if (validId(text)) {
+    const key = findUid(text);
+    if (key) { s.uid = key; persist(); await send('Authorized ID ' + key + '.\n\n' + mainMenu()); }
+    else await send('ID not found. Reply CREATE.');
+    return;
+  }
+
+  if (!u) { await send('Hi, I am Centrix. Reply CREATE for new ID or send your #ID.'); return; }
+  
+  if (!hasAccess(u).ok) {
+    if (/^BUY\s+/i.test(text)) {
+      const code = text.split(/\s+/)[1].toUpperCase();
+      const p = PLANS[code];
+      if (p) {
+        await send('Paystack Checkout for ' + p.label + ' (N' + p.priceNGN + '):\n' + p.paystack + '\n\nAfter payment, reply PAID <reference>');
+      } else {
+        await send('Unknown plan. Available plans: ETV-7, ETX-28, ETY-365, TV-7, TX-28, TY-365');
+      }
+      return;
+    }
+    await send('LIFELINE EXPIRED.\nTo renew via Paystack, reply BUY <plan> (e.g. BUY ETV-7).\nPlans: ETV-7, ETX-28, ETY-365, TV-7, TX-28, TY-365');
+    return;
+  }
+
+  // Sequential Menu Logic (a - h)
+  if (low === 'menu' || low === 'hi') { await send(mainMenu()); return; }
+
+  if (low === 'a' || low.startsWith('write ')) {
+    const prompt = text.replace(/^a\s*|^write\s*/i, '').trim();
+    if (!prompt) { s.pending = 'write'; persist(); await send('Enter topic to WRITE:'); }
+    else await send(await aiWrite(prompt));
+    return;
+  }
+
+  if (low === 'b' || low.startsWith('image ')) {
+    const prompt = text.replace(/^b\s*|^image\s*/i, '').trim();
+    if (!prompt) await send('Type: b <image description>');
+    else await send('Generated Image: ' + imgUrl(prompt));
+    return;
+  }
+
+  if (low === 'c' || low.startsWith('check ')) {
+    const prompt = text.replace(/^c\s*|^check\s*/i, '').trim();
+    if (!prompt) { s.pending = 'check'; persist(); await send('Paste text to CHECK:'); }
+    else await send(await aiCheck(prompt));
+    return;
+  }
+
+  if (low === 'd' || low.includes('auto-response')) {
+    u.autoResponseActive = !u.autoResponseActive; persist();
+    await send('🤖 AI Auto-Response Assistant is now: ' + (u.autoResponseActive ? 'ON (Handling incoming chats automatically)' : 'OFF (Manual Mode)'));
+    return;
+  }
+
+  if (low === 'e' || low.includes('games')) {
+    await send('🎮 GAMES CENTER 🎮\n1. Lagos Life\n2. Campus Life\nReply 1 or 2 to play.');
+    return;
+  }
+
+  if (low === 'f' || low.includes('rewards')) {
+    await send('💎 REWARDS & MINT CENTER 💎\n- Type MINE to earn free lifeline coins.\n- Type MINT to mint your 0.001 MON Centrix NFT Badge.');
+    return;
+  }
+
+  if (low === 'g' || low.includes('wallet')) {
+    await send(renderDisplayWallet(u));
+    return;
+  }
+
+  if (low === 'h' || low.includes('profile')) {
+    await send('👤 MY PROFILE 👤\nID: ' + u.id + '\nRegistered: ' + u.created + '\nAuto-Assistant: ' + (u.autoResponseActive ? 'Enabled' : 'Disabled'));
+    return;
+  }
+
+  if (/^mine$/i.test(low)) {
+    u.coins = (u.coins || 0) + 15; persist();
+    await send('⛏️ Mined +15 coins! Total: ' + u.coins + ' coins.');
+    return;
+  }
+
+  if (/^mint$/i.test(low)) {
+    u.mintedCNX = (u.mintedCNX || 0) + 1; persist();
+    await send('💎 MINT COMMAND SENT 💎\nContract: ' + MONAD_CONTRACT + '\nPrice: 0.001 MON\nMetadata IPFS: bafybeigauvxl4std2kpjs2hm5zb7ca7zn7jhvomw2g6lrx45gldeo4orq4\nBadge added to display wallet!');
+    return;
+  }
+
+  if (s.pending === 'write') { s.pending = null; persist(); await send(await aiWrite(text)); return; }
+  if (s.pending === 'check') { s.pending = null; persist(); await send(await aiCheck(text)); return; }
+
+  await send(await aiChat(u.id, text));
 }
 
-async function doMine(u) {
-  const now = Date.now(); 
-  if (u.lastMine && now - u.lastMine < 60000) return 'Mining cooldown: ' + (60 - Math.floor((now - u.lastMine) / 1000)) + 's. Balance: ' + (u.coins || 0);
-  const earn = 5 + Math.floor(Math.random() * 16); u.coins = (u.coins || 0) + earn; u.lastMine = now; persist();
-  return 'Mined +' + earn + ' coins. Balance: ' + u.coins + '. CONVERT <coins> to swap to lifeline.';
-}
-async function doMint(u) { u.coins = (u.coins || 0) + 25; persist(); return 'Minted NFT-badge +25 coins. Balance: ' + u.coins; }
-async function doConvert(u, raw) {
-  const n = parseInt((raw.match
+const app = express();
+app.use(express.json());
+app.use(express.static(__dirname));
+
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+app.get('/centrix', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+
+app.listen(PORT, () => console.log('Centrix active on ' + BASE));
+module.exports = { handleText, mainMenu, genId };
