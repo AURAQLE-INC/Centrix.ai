@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AURAQLE INC. | CENTRIX.AI - Monad Ecosystem Portal</title>
+<style>
+:root{--gold:#d4af37;--gold2:#f9e27a;--black:#08080a;--white:#fcfcfc;--gray:#9a9a9a;--success:#4caf50}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--black);color:var(--white);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;overflow-x:hidden}
+canvas#bg{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1}
+nav{position:fixed;top:0;width:100%;display:flex;justify-content:space-between;align-items:center;padding:18px 5%;background:rgba(8,8,10,0.92);backdrop-filter:blur(20px);border-bottom:1px solid rgba(212,175,55,0.15);z-index:100}
+.logo{display:flex;align-items:center;gap:12px;font-weight:900;letter-spacing:1px;font-size:15px}
+.logo-q{width:42px;height:42px;border:3px solid var(--gold);border-radius:50%;position:relative;display:grid;place-items:center;font-size:22px;color:var(--gold);transform:rotate(-10deg);font-weight:900}
+.logo-q::after{content:'';position:absolute;width:62px;height:18px;border:1.5px solid var(--gold2);border-radius:50%;transform:rotate(-25deg);top:10px;left:-11px}
+.logo-q span.dot{position:absolute;width:6px;height:6px;background:var(--gold2);border-radius:50%;top:-2px;right:-2px;box-shadow:0 0 8px var(--gold)}
+.menu{display:flex;gap:28px;align-items:center}
+.menu a{color:var(--gray);text-decoration:none;font-size:13px;letter-spacing:1px;text-transform:uppercase;transition:.3s}
+.menu a:hover{color:var(--gold2)}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;padding:12px 24px;border-radius:100px;font-weight:800;font-size:13px;letter-spacing:1px;text-transform:uppercase;box-shadow:0 0 25px rgba(212,175,55,.4);cursor:pointer;border:none;text-decoration:none;display:inline-block;transition:all .2s}
+.btn-gold:hover{transform:translateY(-2px);box-shadow:0 0 35px rgba(212,175,55,.6)}
+.dropdown{position:relative}
+.dropdown-content{position:absolute;top:40px;left:-100px;background:#111114;border:1px solid rgba(212,175,55,.2);border-radius:16px;width:360px;display:none;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.7)}
+.dropdown:hover .dropdown-content,.dropdown:focus-within .dropdown-content{display:block}
+.dropdown-item{padding:18px 22px;border-bottom:1px solid rgba(255,255,255,.06)}
+.dropdown-item h4{color:var(--gold2);font-size:12px;letter-spacing:1.2px;margin-bottom:6px}
+.dropdown-item p{font-size:12.5px;color:#aaa;line-height:1.5}
+.hero{min-height:100vh;display:grid;grid-template-columns:1.1fr .9fr;align-items:center;padding:120px 5% 60px;gap:40px}
+.hero-text h1{font-size:clamp(38px,5vw,68px);line-height:0.95;font-weight:900;letter-spacing:-1.5px}
+.hero-text h1 span.gold{background:linear-gradient(135deg,var(--gold),var(--gold2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-text .sub{margin:18px 0 8px;color:var(--gold2);letter-spacing:3px;text-transform:uppercase;font-size:11px;font-weight:700}
+.hero-text p.lead{color:#b8b8b8;font-size:15.5px;line-height:1.7;max-width:560px;margin:18px 0 28px}
+
+.card3d-wrapper{perspective:1200px;display:grid;place-items:center}
+.card3d{width:100%;max-width:400px;background:linear-gradient(180deg,#141418,#0a0a0c);border:1px solid rgba(212,175,55,.3);border-radius:28px;box-shadow:0 40px 100px rgba(0,0,0,.8), 0 0 25px rgba(212,175,55,0.15);position:relative;padding:24px;display:flex;flex-direction:column;transition:transform 0.1s ease-out}
+.card-top{display:flex;justify-content:space-between;color:var(--gray);font-size:10px;letter-spacing:1.5px;margin-bottom:12px}
+.nft-preview-container{width:100%;height:180px;border-radius:14px;border:1px solid rgba(212,175,55,0.4);overflow:hidden;margin-bottom:14px;position:relative;background:#000}
+.nft-preview-container img{width:100%;height:100%;object-fit:cover}
+.wallet-box{background:rgba(11,15,25,0.8);border:1px solid rgba(212,175,55,0.2);padding:12px 14px;border-radius:14px;font-size:12px;margin-bottom:12px;text-align:left}
+.wallet-box .w-title{color:var(--gold2);font-weight:700;margin-bottom:6px;font-size:11px;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,0.06);padding-bottom:4px}
+.wallet-row{display:flex;justify-content:space-between;color:#9a9a9a;margin-bottom:4px}
+.wallet-row span{color:#fff;font-weight:600}
+.status{display:flex;align-items:center;gap:10px;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.2);padding:10px 14px;border-radius:12px;font-size:11px}
+.status span.live{width:8px;height:8px;background:#00ff88;border-radius:50%;box-shadow:0 0 10px #00ff88;animation:pulse 1.5s infinite;display:inline-block}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;padding:40px 5%}
+.feat{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:22px}
+.feat h3{font-size:13px;color:var(--gold2);margin-bottom:8px;letter-spacing:1px}
+.feat p{font-size:13px;color:#9a9a9a;line-height:1.6}
+.privacy-section{margin:20px 5%;background:rgba(17,17,20,0.8);border:1px solid rgba(76,175,80,0.3);border-radius:18px;padding:28px;text-align:left}
+.privacy-section h3{color:var(--success);font-size:14px;letter-spacing:1px;margin-bottom:8px}
+.privacy-section p{color:#aaa;font-size:13px;line-height:1.6}
+.cta{margin:40px 5%;background:radial-gradient(600px at 50% 0%, rgba(212,175,55,.25), transparent), #111114;border:1px solid rgba(212,175,55,.2);border-radius:24px;padding:50px;text-align:center}
+.cta h2{font-size:34px;margin-bottom:12px;font-weight:900}
+.cta p{color:#aaa;max-width:600px;margin:0 auto 22px;font-size:14px}
+footer{padding:30px 5%;display:flex;justify-content:space-between;color:#666;font-size:11px;border-top:1px solid rgba(255,255,255,.06);flex-wrap:wrap;gap:10px}
+@media(max-width:900px){.hero{grid-template-columns:1fr}.card3d{max-width:100%;margin:0 auto}.features{grid-template-columns:1fr}.menu .hide-m{display:none}.dropdown-content{left:-200px;width:300px}}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<nav>
+<div class="logo"><div class="logo-q">Q<span class="dot"></span></div> AURAQLE INC.</div>
+<div class="menu">
+<a href="#centrix">Centrix AI</a>
+<div class="dropdown"><a href="#" onclick="return false">About ▾</a>
+<div class="dropdown-content">
+<div class="dropdown-item"><h4>AURAQLE LABS</h4><p>We are the R&D engine of AURAQLE INC. Building ir-replicable intelligence at the edge of WhatsApp, Web3 and MPC. We ship tools that feel like magic but run on hard math.</p></div>
+<div class="dropdown-item"><h4>AURAQLE INC.</h4><p>AURAQLE INC. is a precision tech incorporation focused on design, intelligence and infrastructure. We create iconic products that are simple, timeless and impossible to copy.</p></div>
+<div class="dropdown-item"><h4>FOUNDER & DIRECTOR</h4><p><b style="color:#fff">Samuel Success Bright</b> known as <b style="color:#f9e27a">Ghod Father (The Axiom Auraqle)</b> — Builder, designer, axiom thinker. Director of AURAQLE INC. & AURAQLE LABS.</p></div>
+</div>
+</div>
+<a href="#privacy">Privacy</a>
+<a href="https://wa.me/2349162976894?text=Hi%20Centrix" class="btn-gold" target="_blank" style="padding:10px 20px;">Launch WhatsApp</a>
+</div>
+</nav>
+
+<section class="hero">
+<div class="hero-text">
+<div class="sub">CENTRIX AI by AURAQLE LABS • A subsection of AURAQLE INC.</div>
+<h1>WhatsApp <span class="gold">just got</span> a brain.</h1>
+<p class="lead">
+Meet <b style="color:#fff">CENTRIX AI</b> — the WhatsApp MPC bot that actually works. No app switching. No API headaches. Chat it, command it, it executes via secure RPC. Done by Auraqle, live soon.<br><br>
+Founded by <b style="color:#f9e27a">Samuel Success Bright aka Ghod Father (The Axiom Auraqle)</b> — Founder & Director, AURAQLE INC.
+</p>
+<div style="display:flex;gap:12px;flex-wrap:wrap">
+<a href="https://wa.me/2349162976894?text=Hi%20Centrix" class="btn-gold" target="_blank">🚀 Launch WhatsApp Bot</a>
+<a href="#centrix" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#fff;padding:12px 22px;border-radius:100px;font-weight:700;font-size:13px;text-decoration:none;display:inline-block">Explore Ecosystem</a>
+</div>
+<div style="margin-top:22px;display:flex;gap:18px;color:#777;font-size:11px;flex-wrap:wrap">
+<span>✓ WhatsApp Native</span><span>✓ Monad Network</span><span>✓ Pinata IPFS Secured</span><span>✓ Zero-Knowledge Isolation</span>
+</div>
+</div>
+
+<div class="card3d-wrapper" id="cardWrapper">
+<div class="card3d" id="tiltCard">
+<div class="card-top"><span>CENTRIX_AI_v1.rpc</span><span style="color:#f9e27a">● MONAD TESTNET</span></div>
+<div class="nft-preview-container">
+<img src="https://gateway.pinata.cloud/ipfs/bafybeigauvxl4std2kpjs2hm5zb7ca7zn7jhvomw2g6lrx45gldeo4orq4" alt="Centrix CNX Asset Badge">
+</div>
+<div class="wallet-box">
+<div class="w-title">💳 In-App Display Wallet</div>
+<div class="wallet-row">Subscription: <span style="color:var(--success);">Student Lifeline (Active)</span></div>
+<div class="wallet-row">Reward Coins: <span>150 CNX Coins</span></div>
+<div class="wallet-row">Minted Assets: <span style="color:var(--gold);">1 CNX Badge (0.001 MON)</span></div>
+</div>
+<div class="status"><span class="live"></span> Bot Status: RPC handshake active. Ready for student deployment via WhatsApp.</div>
+</div>
+</div>
+</section>
+
+<div class="features" id="centrix">
+<div class="feat"><h3>💬 WHATSAPP MPC</h3><p>First true Multi-Party Computation bot on WhatsApp. Private, encrypted actions without leaving the chat.</p></div>
+<div class="feat"><h3>⚡ RPC LIVING</h3><p>Already built. We just flip the RPC switch. Sub-second execution, auto-reconnect, persistent sessions.</p></div>
+<div class="feat"><h3>🛰️ BY AURAQLE LABS</h3><p>A subsection of AURAQLE INC. We don't chase trends, we create axioms. CENTRIX AI is product #1.</p></div>
+</div>
+
+<section class="privacy-section" id="privacy">
+<h3>🔒 Privacy & Data Transparency Standard</h3>
+<p>Centrix AI processes interactions dynamically to execute requested tasks. All conversation threads and saved document tokens are isolated per individual user ID (`#ID`). Administrator telemetry displays system health, active subscriptions, and Monad contract status—never individual message contents.</p>
+</section>
+
+<section class="cta" id="waitlist">
+<h2>Be first when Centrix goes live</h2>
+<p>CENTRIX AI by AURAQLE LABS is currently in closed RPC. Join the waitlist — Ghod Father will ping you personally when we go live.</p>
+<form onsubmit="event.preventDefault();alert('AURAQLE: You are in. Centrix will DM you on WhatsApp soon, Ghod Father.')" style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+<input type="text" placeholder="Your WhatsApp number" required style="padding:14px 18px;border-radius:100px;border:1px solid rgba(212,175,55,.3);background:#0a0a0a;color:#fff;width:260px">
+<button class="btn-gold" type="submit">Get Early Access</button>
+</form>
+</section>
+
+<footer id="contact">
+<span>© 2026 AURAQLE INC. • AURAQLE LABS • Built by Samuel Success Bright aka Ghod Father</span>
+<span>auraqle.com • Precision. Clarity. Orbit.</span>
+</footer>
+
+<script>
+const c=document.getElementById('bg'),x=c.getContext('2d');let w,h,pts=[];
+function resize(){w=c.width=window.innerWidth;h=c.height=window.innerHeight}window.onresize=resize;resize();
+for(let i=0;i<60;i++)pts.push({x:Math.random()*w,y:Math.random()*h,vx:(Math.random()-.5)*.4,vy:(Math.random()-.5)*.4,r:Math.random()*1.4+0.3});
+function anim(){x.clearRect(0,0,w,h);x.fillStyle='rgba(212,175,55,0.16)';pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>w)p.vx*=-1;if(p.y<0||p.y>h)p.vy*=-1;x.beginPath();x.arc(p.x,p.y,p.r,0,Math.PI*2);x.fill();});requestAnimationFrame(anim)}anim();
+
+const wrapper = document.getElementById('cardWrapper');
+const card = document.getElementById('tiltCard');
+document.addEventListener('mousemove', e => {
+  let cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+  let dx = (e.clientX - cx) / cx, dy = (e.clientY - cy) / cy;
+  card.style.transform = `rotateY(${ -10 + dx * 8}deg) rotateX(${8 + dy * -6}deg) translateZ(10px)`;
+});
+wrapper.addEventListener('mouseleave', () => {
+  card.style.transform = 'rotateY(0deg) rotateX(0deg) translateZ(0px)';
+});
+</script>
+</body>
+</html>
