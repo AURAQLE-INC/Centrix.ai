@@ -1,12 +1,10 @@
 {
   "name": "centrix-ai",
-  "version": "2.0.0",
-  "description": "Private-host WhatsApp AI Starter with Lifeline Billing, Anti-Share Protection, and CMS",
+  "version": "1.0.0",
+  "description": "Centrix.ai Private WhatsApp AI & Monad NFT Mint",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "cms": "node centrix.admin.cms.js",
-    "wallet": "node centrix.wallet.server.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
@@ -14,5 +12,6 @@
   },
   "engines": {
     "node": ">=18.0.0"
-  }
+  },
+  "license": "MIT"
 }
