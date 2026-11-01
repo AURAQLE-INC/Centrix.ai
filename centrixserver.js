@@ -1,6 +1,6 @@
 /**
  * CENTRIX.AI - by AURACLE_INC | Private-host WhatsApp AI starter (Node 18+)
- * WhatsApp + Express Local Site + Lifeline Billing + Paystack Links + Monad Mint + Auto-Response Handover + Display Wallet
+ * WhatsApp + Express Local Site + Lifeline Billing + Paystack Links + Monad Mint + Auto-Response Handover + Display Wallet + Admin CMS
  */
 
 require('dotenv').config();
@@ -11,13 +11,13 @@ const PORT = process.env.PORT || 3000;
 const BASE = (process.env.PUBLIC_BASE_URL || ('http://127.0.0.1:' + PORT)).replace(/\/$/, '');
 const WA_NUMBER = process.env.WHATSAPP_NUMBER || '2349162976894';
 const WA_QR = process.env.WA_QR_LINK || 'https://wa.me/qr/4EUNOUKJAL7AK1';
-const WA_LINK = 'https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent('Hi Centrix');
 const MONAD_CONTRACT = process.env.MONAD_CONTRACT_ADDRESS || '0xd9123456789abcdef0123456789abcdef01234567';
 
 const OLLAMA_HOST = (process.env.OLLAMA_HOST || 'http://127.0.0.1:11434').replace(/\/$/, '');
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3.1:8b';
-const VAULT_SECRET = process.env.VAULT_SECRET || 'CHANGE-ME-32-CHARS-MINIMUM';
+const VAULT_SECRET = process.env.VAULT_SECRET || 'Auraqle@Ghod2026!NoCarryPikinGbese#';
 const TRIAL_DAYS = parseInt(process.env.TRIAL_DAYS || '30', 10);
+const ADMIN_SECRET = process.env.ADMIN_SECRET || 'GhodFatherSecretKey';
 
 // Lifeline plans with Paystack redirect links
 const PLANS = {
@@ -28,7 +28,6 @@ const PLANS = {
   'TX-28':  { label: '1 month standard lifeline', hours: 720,  priceNGN: 350, paystack: 'https://paystack.com/pay/tx-28' },
   'TY-365': { label: '1 year standard lifeline',  hours: 8760, priceNGN: 3850, paystack: 'https://paystack.com/pay/ty-365' },
 };
-const COINS_PER_HOUR = 100;
 
 const DATA = path.join(__dirname, 'data');
 try { fs.mkdirSync(DATA, { recursive: true }); } catch (e) {}
@@ -45,7 +44,6 @@ const ALPH = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const genId = () => '#' + Array.from({ length: 7 }, () => ALPH[crypto.randomInt(ALPH.length)]).join('');
 const normId = s => String(s || '').trim().toUpperCase();
 const validId = s => /^#[A-Z0-9]{7}$/.test(normId(s));
-const numOf = jid => String(jid || '').split('@')[0].split(':')[0];
 
 async function llmChat(msgs, max = 600) {
   try {
@@ -243,6 +241,41 @@ app.use(express.static(__dirname));
 
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/centrix', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+
+// --- SECURE ADMIN CMS ROUTE ---
+app.get('/admin-cms', (req, res) => {
+  const adminSecret = req.query.key;
+  if (adminSecret !== ADMIN_SECRET) {
+    return res.status(403).send('<h1>403 Forbidden</h1><p>Unauthorized access to Centrix Admin CMS.</p>');
+  }
+
+  const totalUsers = Object.keys(users).length;
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <title>Centrix.ai - Admin CMS</title>
+      <style>
+        body { background: #08080a; color: #fcfcfc; font-family: sans-serif; padding: 40px; }
+        .card { background: #111114; border: 1px solid rgba(212,175,55,0.3); border-radius: 12px; padding: 24px; max-width: 600px; margin: auto; }
+        h1 { color: #d4af37; font-size: 22px; margin-bottom: 10px; }
+        .stat { background: #1a1a20; padding: 12px; margin: 10px 0; border-radius: 8px; display: flex; justify-content: space-between; }
+      </style>
+    </head>
+    <body>
+      <div class="card">
+        <h1>🛡️ CENTRIX ADMIN CMS</h1>
+        <p>Auraqle Labs Control Panel</p>
+        <hr style="border:0; border-top:1px solid #333; margin:15px 0;">
+        <div class="stat"><span>Total Registered Users:</span> <strong style="color:#f9e27a;">${totalUsers}</strong></div>
+        <div class="stat"><span>Monad Contract:</span> <strong style="color:#f9e27a;">${MONAD_CONTRACT}</strong></div>
+        <div class="stat"><span>Server Status:</span> <strong style="color:#4caf50;">ONLINE (Render Live)</strong></div>
+      </div>
+    </body>
+    </html>
+  `);
+});
 
 app.listen(PORT, () => console.log('Centrix active on ' + BASE));
 module.exports = { handleText, mainMenu, genId };
